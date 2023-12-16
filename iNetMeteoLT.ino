@@ -78,12 +78,13 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   mqttClient.poll();
+  delay(10);
 }
 
 void messageHandler(int messageSize) {
   // we received a message, print out the topic and contents
-  Serial.print("TOPIC: ");
-  Serial.println(mqttClient.messageTopic());
+  //Serial.print("TOPIC: ");
+  //Serial.println(mqttClient.messageTopic());
   //JSONVar myArray = JSON.parse(mqttClient.readString());
 
   // use the Stream interface to print the contents
