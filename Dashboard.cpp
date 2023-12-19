@@ -87,10 +87,10 @@ void showDash(TFT_eSprite *sprite, float T, float S) {
   sprite->drawString("W", letterCoord.xW, letterCoord.yW);
   sprite->drawString("E", letterCoord.xE, letterCoord.yE);
 
-  sprite->fillCircle(letterCoord.xNW, letterCoord.yNW, 3, TFT_SKYBLUE);
-  sprite->fillCircle(letterCoord.xNE, letterCoord.yNE, 3, TFT_SKYBLUE);
-  sprite->fillCircle(letterCoord.xSW, letterCoord.ySW, 3, TFT_SKYBLUE);
-  sprite->fillCircle(letterCoord.xSE, letterCoord.ySE, 3, TFT_SKYBLUE);
+  sprite->fillCircle(letterCoord.xNW, letterCoord.yNW, 2, TFT_SKYBLUE);
+  sprite->fillCircle(letterCoord.xNE, letterCoord.yNE, 2, TFT_SKYBLUE);
+  sprite->fillCircle(letterCoord.xSW, letterCoord.ySW, 2, TFT_SKYBLUE);
+  sprite->fillCircle(letterCoord.xSE, letterCoord.ySE, 2, TFT_SKYBLUE);
 
   //---------------------
   //Show windspeed gadget
