@@ -20,8 +20,8 @@
 #include <SPI.h>
 #include "Free_Fonts.h"
 
-const unsigned int arrowHeight = 55;
-const unsigned int arrowBaseWidth = 18;
+const unsigned int arrowHeight = 54;
+const unsigned int arrowBaseWidth = 17;
 const unsigned int compassD = 80;
 
 struct coord {

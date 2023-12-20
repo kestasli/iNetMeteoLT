@@ -82,20 +82,20 @@ void loop() {
 }
 
 void messageHandler(int messageSize) {
-  // we received a message, print out the topic and contents
-  //Serial.print("TOPIC: ");
-  //Serial.println(mqttClient.messageTopic());
-  //JSONVar myArray = JSON.parse(mqttClient.readString());
 
-  // use the Stream interface to print the contents
-  //while (mqttClient.available()) {
-  //  Serial.print((char)mqttClient.read());
-  //}
+  //char topicContent[messageSize] = {0};
+  char topicContent[256] = {0};
 
-  String topicContent = mqttClient.readString();
+  int i = 0;
+  while (mqttClient.available()) {
+    topicContent[i] = (char)mqttClient.read();
+    i++;
+  }
+  topicContent[i] = '\0';
+
   JSONVar myArray = JSON.parse(topicContent);
 
-  /*
+  Serial.println(messageSize);
   Serial.println(topicContent);
   Serial.print("Temperature:\t");
   Serial.println(myArray["temp"]);
@@ -108,8 +108,9 @@ void messageHandler(int messageSize) {
 
   Serial.print("Name:\t");
   Serial.println(myArray["station_name"]);
-  */
+  
   showDash(&numberDash, (double) myArray["temp"], (double) myArray["windspd"]);
   showDirection(&directionDash, &numberDash, (int) myArray["winddir"]);
   numberDash.pushSprite(0, 0);
+  
 }
