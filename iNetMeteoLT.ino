@@ -25,8 +25,11 @@ USB Mode	          Hardware CDC and JTAG
 #include "Free_Fonts.h"
 #include "Dashboard.h"
 
-const char MQTT_TOPIC[] = "weather/0000";
-//const char MQTT_TOPIC[] = "weather/0310";
+#define ROTATE_BUTTON 14
+int screenRotation = 1;
+
+//const char MQTT_TOPIC[] = "weather/0000";
+const char MQTT_TOPIC[] = "weather/0310";
 //const char MQTT_TOPIC[] = "weather/1187";
 
 WiFiClientSecure wifiClient = WiFiClientSecure();
@@ -40,8 +43,11 @@ void setup() {
   // initialize the serial port
   Serial.begin(115200);
   tft.init();
-  tft.setRotation(1);
+  tft.setRotation(screenRotation);
   tft.fillScreen(TFT_BLACK);
+
+  pinMode(ROTATE_BUTTON, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ROTATE_BUTTON), rotateScreen, FALLING);
 
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
@@ -91,12 +97,15 @@ void messageHandler(int messageSize) {
     topicContent[i] = (char)mqttClient.read();
     i++;
   }
+  //Terminate shar string with 0
   topicContent[i] = '\0';
 
   JSONVar myArray = JSON.parse(topicContent);
 
   Serial.println(messageSize);
+  Serial.println(screenRotation);
   Serial.println(topicContent);
+  /*
   Serial.print("Temperature:\t");
   Serial.println(myArray["temp"]);
   
@@ -108,9 +117,14 @@ void messageHandler(int messageSize) {
 
   Serial.print("Name:\t");
   Serial.println(myArray["station_name"]);
-  
+  */
   showDash(&numberDash, (double) myArray["temp"], (double) myArray["windspd"]);
   showDirection(&directionDash, &numberDash, (int) myArray["winddir"]);
   numberDash.pushSprite(0, 0);
-  
+}
+
+void rotateScreen(){
+  screenRotation = -1 * screenRotation;
+  tft.setRotation(screenRotation);
+  //tft.fillScreen(TFT_BLUE);
 }
