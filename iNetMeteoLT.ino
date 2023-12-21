@@ -90,7 +90,7 @@ void loop() {
 void messageHandler(int messageSize) {
 
   //char topicContent[messageSize] = {0};
-  char topicContent[256] = {0};
+  char topicContent[256] = { 0 };
 
   int i = 0;
   while (mqttClient.available()) {
@@ -118,13 +118,16 @@ void messageHandler(int messageSize) {
   Serial.print("Name:\t");
   Serial.println(myArray["station_name"]);
   */
-  showDash(&numberDash, (double) myArray["temp"], (double) myArray["windspd"]);
-  showDirection(&directionDash, &numberDash, (int) myArray["winddir"]);
+  showDash(&numberDash, (double)myArray["temp"], (double)myArray["windspd"]);
+  showDirection(&directionDash, &numberDash, (int)myArray["winddir"]);
   numberDash.pushSprite(0, 0);
 }
 
-void rotateScreen(){
-  screenRotation = -1 * screenRotation;
-  tft.setRotation(screenRotation);
-  //tft.fillScreen(TFT_BLUE);
+void rotateScreen() {
+  static uint32_t lastInt = 0;
+  if (millis() - lastInt > 200) {
+    screenRotation = -1 * screenRotation;
+    tft.setRotation(screenRotation);
+    lastInt = millis();
+  }
 }
