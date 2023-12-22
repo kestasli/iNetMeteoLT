@@ -61,7 +61,7 @@ triangleCoord calcTriangleCoord(int x0, int y0) {
   return coord;
 }
 
-void showDash(TFT_eSprite *sprite, float T, float S) {
+void showDash(TFT_eSprite *sprite, float T, float S, char *date) {
 
   circleColor = TFT_SKYBLUE;
   tempColor = TFT_WHITE;
@@ -88,6 +88,13 @@ void showDash(TFT_eSprite *sprite, float T, float S) {
   sprite->setTextColor(circleColor);
   sprite->setTextDatum(TC_DATUM);
   sprite->drawFloat(abs(S), 1, compassX, compassY + compassD / 2 + 20);
+
+  //
+  //Show refresh time gadget
+  //
+   sprite->setTextFont(FONT2);
+   sprite->setTextDatum(BC_DATUM);
+   sprite->drawString(date, compassD + (SCREEN_W - compassD) / 2, SCREEN_H);
 }
 
 //---------------------

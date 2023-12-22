@@ -91,7 +91,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   mqttClient.poll();
   tft.setRotation(screenRotation);
-  showDash(&numberDash, temp, windspd);
+  showDash(&numberDash, temp, windspd, update);
   showDirection(&directionDash, &numberDash, winddir);
   numberDash.pushSprite(0, 0);
   //delay(10);
@@ -112,10 +112,24 @@ void messageHandler(int messageSize) {
 
   JSONVar myArray = JSON.parse(topicContent);
 
-  temp = (double) myArray["temp"];
-  windspd = (double) myArray["spd"];
-  winddir = (int) myArray["dir"];
-  strcpy(update, (const char*) myArray["update"]);
+
+  if (myArray.hasOwnProperty("temp")) {
+      temp = (double) myArray["temp"];
+  }
+
+  if (myArray.hasOwnProperty("spd")) {
+      windspd = (double) myArray["spd"];
+  }
+
+  if (myArray.hasOwnProperty("dir")) {
+      winddir = (int) myArray["dir"];
+  }
+  
+  if (myArray.hasOwnProperty("update")) {
+    strncpy(update, (const char*) myArray["update"], 21);    
+  }
+  
+  //strcpy(update, (const char*) myArray["update"]);
 
   Serial.println(messageSize);
   Serial.println(screenRotation);
