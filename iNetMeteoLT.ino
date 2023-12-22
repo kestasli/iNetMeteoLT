@@ -31,6 +31,11 @@ int screenRotation = 1;
 //const char MQTT_TOPIC[] = "weather/0000";
 const char MQTT_TOPIC[] = "weather/0310";
 //const char MQTT_TOPIC[] = "weather/1187";
+//const char MQTT_TOPIC[] = "weather/4001";
+
+double temp;
+double windspd;
+int winddir;
 
 WiFiClientSecure wifiClient = WiFiClientSecure();
 MqttClient mqttClient(wifiClient);
@@ -84,7 +89,11 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   mqttClient.poll();
-  delay(10);
+  tft.setRotation(screenRotation);
+  showDash(&numberDash, temp, windspd);
+  showDirection(&directionDash, &numberDash, winddir);
+  numberDash.pushSprite(0, 0);
+  //delay(10);
 }
 
 void messageHandler(int messageSize) {
@@ -105,29 +114,16 @@ void messageHandler(int messageSize) {
   Serial.println(messageSize);
   Serial.println(screenRotation);
   Serial.println(topicContent);
-  /*
-  Serial.print("Temperature:\t");
-  Serial.println(myArray["temp"]);
-  
-  Serial.print("Windspeed:\t");
-  Serial.println(myArray["windspd"]);
 
-  Serial.print("Winddir:\t");
-  Serial.println(myArray["winddir"]);
-
-  Serial.print("Name:\t");
-  Serial.println(myArray["station_name"]);
-  */
-  showDash(&numberDash, (double)myArray["temp"], (double)myArray["windspd"]);
-  showDirection(&directionDash, &numberDash, (int)myArray["winddir"]);
-  numberDash.pushSprite(0, 0);
+  temp = (double)myArray["temp"];
+  windspd = (double)myArray["windspd"];
+  winddir = (int)myArray["winddir"];
 }
 
 void rotateScreen() {
   static uint32_t lastInt = 0;
   if (millis() - lastInt > 200) {
     screenRotation = -1 * screenRotation;
-    tft.setRotation(screenRotation);
     lastInt = millis();
   }
 }

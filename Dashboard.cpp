@@ -5,6 +5,10 @@
 unsigned int compassX;
 unsigned int compassY;
 
+unsigned int dirColor;
+unsigned int circleColor;
+unsigned int tempColor;
+
 //calculates x y points for compass letters and dots
 coord calcCompassPoints(int x, int y, int diameter) {
   int radius = diameter / 2;
@@ -58,6 +62,9 @@ triangleCoord calcTriangleCoord(int x0, int y0) {
 }
 
 void showDash(TFT_eSprite *sprite, float T, float S) {
+
+  circleColor = TFT_SKYBLUE;
+  tempColor = TFT_WHITE;
   //will put comapss letters in top left corner and add 7 points not to cut letters
   compassX = compassD / 2 + 7;
   compassY = compassD / 2 + 7 + 20;
@@ -69,34 +76,16 @@ void showDash(TFT_eSprite *sprite, float T, float S) {
   sprite->fillSprite(TFT_BLACK);
   //sprite->setFreeFont(&FreeSansBold56pt7b);
   sprite->setTextFont(FONT8);
-  sprite->setTextColor(TFT_WHITE);
+  sprite->setTextColor(tempColor);
   int textH = sprite->fontHeight();
   sprite->setTextDatum(CC_DATUM);
   int textW = sprite->drawFloat(T, 1, compassD + (SCREEN_W - compassD) / 2, SCREEN_H / 2);
 
-  //---------------------
-  //Show compass directions gadget
-  //---------------------
-  sprite->setTextFont(FONT2);
-  sprite->setTextColor(TFT_SKYBLUE);
-  coord letterCoord = calcCompassPoints(compassX, compassY, compassD);
-  sprite->setTextDatum(CC_DATUM);
-
-  sprite->drawString("N", letterCoord.xN, letterCoord.yN);
-  sprite->drawString("S", letterCoord.xS, letterCoord.yS);
-  sprite->drawString("W", letterCoord.xW, letterCoord.yW);
-  sprite->drawString("E", letterCoord.xE, letterCoord.yE);
-
-  sprite->fillCircle(letterCoord.xNW, letterCoord.yNW, 2, TFT_SKYBLUE);
-  sprite->fillCircle(letterCoord.xNE, letterCoord.yNE, 2, TFT_SKYBLUE);
-  sprite->fillCircle(letterCoord.xSW, letterCoord.ySW, 2, TFT_SKYBLUE);
-  sprite->fillCircle(letterCoord.xSE, letterCoord.ySE, 2, TFT_SKYBLUE);
-
-  //---------------------
+   //---------------------
   //Show windspeed gadget
   //---------------------
   sprite->setTextFont(FONT6);
-  sprite->setTextColor(TFT_SKYBLUE);
+  sprite->setTextColor(circleColor);
   sprite->setTextDatum(TC_DATUM);
   sprite->drawFloat(abs(S), 1, compassX, compassY + compassD / 2 + 20);
 }
@@ -105,10 +94,30 @@ void showDash(TFT_eSprite *sprite, float T, float S) {
 //Show arrow gadget
 //---------------------
 void showDirection(TFT_eSprite *arrowSprite, TFT_eSprite *dashSprite, int D) {
+  dirColor = TFT_ORANGE;
+  circleColor = TFT_SKYBLUE;
+  //---------------------
+  //Show compass circle gadget
+  //---------------------
+  dashSprite->setTextFont(FONT2);
+  dashSprite->setTextColor(circleColor);
+  coord letterCoord = calcCompassPoints(compassX, compassY, compassD);
+  dashSprite->setTextDatum(CC_DATUM);
+
+  dashSprite->drawString("N", letterCoord.xN, letterCoord.yN);
+  dashSprite->drawString("S", letterCoord.xS, letterCoord.yS);
+  dashSprite->drawString("W", letterCoord.xW, letterCoord.yW);
+  dashSprite->drawString("E", letterCoord.xE, letterCoord.yE);
+
+  dashSprite->fillCircle(letterCoord.xNW, letterCoord.yNW, 2, circleColor);
+  dashSprite->fillCircle(letterCoord.xNE, letterCoord.yNE, 2, circleColor);
+  dashSprite->fillCircle(letterCoord.xSW, letterCoord.ySW, 2, circleColor);
+  dashSprite->fillCircle(letterCoord.xSE, letterCoord.ySE, 2, circleColor);
+
   arrowSprite->createSprite(arrowBaseWidth, arrowHeight);
   arrowSprite->fillSprite(TFT_BLACK);
   triangleCoord arrow = calcTriangleCoord(arrowBaseWidth / 2, arrowHeight / 2);
-  arrowSprite->fillTriangle(arrow.x1, arrow.y1, arrow.x2, arrow.y2, arrow.x3, arrow.y3, TFT_GREEN);
+  arrowSprite->fillTriangle(arrow.x1, arrow.y1, arrow.x2, arrow.y2, arrow.x3, arrow.y3, dirColor);
   dashSprite->setPivot(compassX, compassY);
   arrowSprite->pushRotated(dashSprite, D, TFT_BLACK);
 }
