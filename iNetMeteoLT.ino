@@ -33,9 +33,10 @@ const char MQTT_TOPIC[] = "weather/0310";
 //const char MQTT_TOPIC[] = "weather/1187";
 //const char MQTT_TOPIC[] = "weather/4001";
 
-double temp;
-double windspd;
-int winddir;
+double temp = 0;
+double windspd = 0;
+int winddir = 0;
+char update[21] = {0};
 
 WiFiClientSecure wifiClient = WiFiClientSecure();
 MqttClient mqttClient(wifiClient);
@@ -111,13 +112,15 @@ void messageHandler(int messageSize) {
 
   JSONVar myArray = JSON.parse(topicContent);
 
+  temp = (double) myArray["temp"];
+  windspd = (double) myArray["spd"];
+  winddir = (int) myArray["dir"];
+  strcpy(update, (const char*) myArray["update"]);
+
   Serial.println(messageSize);
   Serial.println(screenRotation);
   Serial.println(topicContent);
-
-  temp = (double)myArray["temp"];
-  windspd = (double)myArray["windspd"];
-  winddir = (int)myArray["winddir"];
+  Serial.println(update);
 }
 
 void rotateScreen() {
