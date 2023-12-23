@@ -118,18 +118,20 @@ void loop() {
     //Retry connection if server lost
     Serial.println("MQTT connection down");
     delay(1000);
+    connectHiveMQ(&mqttClient);
+    /*
     if (mqttClient.connect(IOT_ENDPOINT, 8883)) {
       Serial.println("You're connected to the MQTT broker!");
       Serial.println();
       mqttClient.onMessage(messageHandler);
       mqttClient.subscribe(MQTT_TOPIC);
     }
+    */
   }
   //delay(10);
 }
 
 //34:85:18:8b:9a:48
-
 void messageHandler(int messageSize) {
   //char topicContent[messageSize] = {0};
   char topicContent[256] = { 0 };
