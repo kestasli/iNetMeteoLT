@@ -28,15 +28,18 @@ USB Mode	          Hardware CDC and JTAG
 #define ROTATE_BUTTON 14
 int screenRotation = 1;
 
-//const char MQTT_TOPIC[] = "weather/0000";
-const char MQTT_TOPIC[] = "weather/0310";
+//const char MQTT_TOPIC[] = "weather/0310";
+const char MQTT_TOPIC[] = "weather/0000";
 //const char MQTT_TOPIC[] = "weather/1187";
 //const char MQTT_TOPIC[] = "weather/4001";
+
+unsigned long previous_time = 0;
+unsigned long wifi_delay = 10000;  // 10 seconds delay
 
 double temp = 0;
 double windspd = 0;
 int winddir = 0;
-char update[21] = {0};
+char update[21] = { 0 };
 
 WiFiClientSecure wifiClient = WiFiClientSecure();
 MqttClient mqttClient(wifiClient);
@@ -71,9 +74,12 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
-  // Connect to AWS IoT
+  // Connect to HiveMQ IoT
   wifiClient.setCACert(CERT_CA);
+  connectHiveMQ(&mqttClient);
+  /*
   mqttClient.setUsernamePassword(MQTT_USER, MQTT_PASS);
+
   if (mqttClient.connect(IOT_ENDPOINT, 8883)) {
     Serial.println("You're connected to the MQTT broker!");
     Serial.println();
@@ -85,20 +91,46 @@ void setup() {
   // Subscribe to MQTT and register a callback
   mqttClient.onMessage(messageHandler);
   mqttClient.subscribe(MQTT_TOPIC);
+  */
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  mqttClient.poll();
-  tft.setRotation(screenRotation);
-  showDash(&numberDash, temp, windspd, update);
-  showDirection(&directionDash, &numberDash, winddir);
-  numberDash.pushSprite(0, 0);
+  unsigned long current_time = millis();  // number of milliseconds since the upload
+
+  // checking for WIFI connection, reconnect if neded
+  if ((WiFi.status() != WL_CONNECTED) && (current_time - previous_time >= wifi_delay)) {
+    Serial.print(millis());
+    Serial.println("Reconnecting to WIFI network");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    previous_time = current_time;
+  }
+
+  if (mqttClient.connected()) {
+    //Do server polling a
+    mqttClient.poll();
+    tft.setRotation(screenRotation);
+    showDash(&numberDash, temp, windspd, update);
+    showDirection(&directionDash, &numberDash, winddir);
+    numberDash.pushSprite(0, 0);
+
+  } else {
+    //Retry connection if server lost
+    Serial.println("MQTT connection down");
+    delay(1000);
+    if (mqttClient.connect(IOT_ENDPOINT, 8883)) {
+      Serial.println("You're connected to the MQTT broker!");
+      Serial.println();
+      mqttClient.onMessage(messageHandler);
+      mqttClient.subscribe(MQTT_TOPIC);
+    }
+  }
   //delay(10);
 }
 
-void messageHandler(int messageSize) {
+//34:85:18:8b:9a:48
 
+void messageHandler(int messageSize) {
   //char topicContent[messageSize] = {0};
   char topicContent[256] = { 0 };
 
@@ -112,24 +144,21 @@ void messageHandler(int messageSize) {
 
   JSONVar myArray = JSON.parse(topicContent);
 
-
   if (myArray.hasOwnProperty("temp")) {
-      temp = (double) myArray["temp"];
+    temp = (double)myArray["temp"];
   }
 
   if (myArray.hasOwnProperty("spd")) {
-      windspd = (double) myArray["spd"];
+    windspd = (double)myArray["spd"];
   }
 
   if (myArray.hasOwnProperty("dir")) {
-      winddir = (int) myArray["dir"];
+    winddir = (int)myArray["dir"];
   }
-  
+
   if (myArray.hasOwnProperty("update")) {
-    strncpy(update, (const char*) myArray["update"], 21);    
+    strncpy(update, (const char*)myArray["update"], 21);
   }
-  
-  //strcpy(update, (const char*) myArray["update"]);
 
   Serial.println(messageSize);
   Serial.println(screenRotation);
@@ -143,4 +172,21 @@ void rotateScreen() {
     screenRotation = -1 * screenRotation;
     lastInt = millis();
   }
+}
+
+void connectHiveMQ(MqttClient *client){
+    // Connect to HiveMQ IoT
+  client->setUsernamePassword(MQTT_USER, MQTT_PASS);
+
+  if (client->connect(IOT_ENDPOINT, 8883)) {
+    Serial.println("You're connected to the MQTT broker!");
+    Serial.println();
+  } else {
+    Serial.print("MQTT connection failed! Error code = ");
+    Serial.println(mqttClient.connectError());
+  }
+
+  // Subscribe to MQTT and register a callback
+  client->onMessage(messageHandler);
+  client->subscribe(MQTT_TOPIC);
 }
