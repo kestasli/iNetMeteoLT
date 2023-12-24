@@ -33,8 +33,8 @@ const char MQTT_TOPIC[] = "weather/0000";
 //const char MQTT_TOPIC[] = "weather/1187";
 //const char MQTT_TOPIC[] = "weather/4001";
 
-unsigned long previous_time = 0;
-unsigned long wifi_delay = 10000;  // 10 seconds delay
+unsigned long previous_time = 0;//WiFi delay period start
+unsigned long wifi_delay = 10000;// 10 seconds delay for WiFi recoonect
 
 double temp = 0;
 double windspd = 0;
@@ -62,8 +62,8 @@ void setup() {
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -77,21 +77,6 @@ void setup() {
   // Connect to HiveMQ IoT
   wifiClient.setCACert(CERT_CA);
   connectHiveMQ(&mqttClient);
-  /*
-  mqttClient.setUsernamePassword(MQTT_USER, MQTT_PASS);
-
-  if (mqttClient.connect(IOT_ENDPOINT, 8883)) {
-    Serial.println("You're connected to the MQTT broker!");
-    Serial.println();
-  } else {
-    Serial.print("MQTT connection failed! Error code = ");
-    Serial.println(mqttClient.connectError());
-  }
-
-  // Subscribe to MQTT and register a callback
-  mqttClient.onMessage(messageHandler);
-  mqttClient.subscribe(MQTT_TOPIC);
-  */
 }
 
 void loop() {
@@ -99,7 +84,6 @@ void loop() {
 
   // checking for WIFI connection, reconnect if neded
   if ((WiFi.status() != WL_CONNECTED) && (current_time - previous_time >= wifi_delay)) {
-    Serial.print(millis());
     Serial.println("Reconnecting to WIFI network");
     WiFi.disconnect();
     WiFi.reconnect();
@@ -117,25 +101,14 @@ void loop() {
   } else {
     //Retry connection if server lost
     Serial.println("MQTT connection down");
-    delay(1000);
+    delay(1000); //should replace not to disrupt loop
     connectHiveMQ(&mqttClient);
-    /*
-    if (mqttClient.connect(IOT_ENDPOINT, 8883)) {
-      Serial.println("You're connected to the MQTT broker!");
-      Serial.println();
-      mqttClient.onMessage(messageHandler);
-      mqttClient.subscribe(MQTT_TOPIC);
-    }
-    */
   }
-  //delay(10);
 }
 
 //34:85:18:8b:9a:48
 void messageHandler(int messageSize) {
-  //char topicContent[messageSize] = {0};
   char topicContent[256] = { 0 };
-
   int i = 0;
   while (mqttClient.available()) {
     topicContent[i] = (char)mqttClient.read();
@@ -143,7 +116,6 @@ void messageHandler(int messageSize) {
   }
   //Terminate shar string with 0
   topicContent[i] = '\0';
-
   JSONVar myArray = JSON.parse(topicContent);
 
   if (myArray.hasOwnProperty("temp")) {
@@ -168,6 +140,7 @@ void messageHandler(int messageSize) {
   Serial.println(update);
 }
 
+//respond to button interrupt and invert rotation value
 void rotateScreen() {
   static uint32_t lastInt = 0;
   if (millis() - lastInt > 200) {
@@ -176,6 +149,7 @@ void rotateScreen() {
   }
 }
 
+//handle connection to MQTT server
 void connectHiveMQ(MqttClient *client){
     // Connect to HiveMQ IoT
   client->setUsernamePassword(MQTT_USER, MQTT_PASS);
