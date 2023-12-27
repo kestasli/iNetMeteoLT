@@ -28,13 +28,13 @@ USB Mode	          Hardware CDC and JTAG
 #define ROTATE_BUTTON 14
 int screenRotation = 1;
 
-//const char MQTT_TOPIC[] = "weather/0310";
-const char MQTT_TOPIC[] = "weather/0000";
+const char MQTT_TOPIC[] = "weather/0310";
+//const char MQTT_TOPIC[] = "weather/0000";
 //const char MQTT_TOPIC[] = "weather/1187";
 //const char MQTT_TOPIC[] = "weather/4001";
 
-unsigned long previous_time = 0;//WiFi delay period start
-unsigned long wifi_delay = 10000;// 10 seconds delay for WiFi recoonect
+unsigned long previous_time = 0;   //WiFi delay period start
+unsigned long wifi_delay = 10000;  // 10 seconds delay for WiFi recoonect
 
 double temp = 0;
 double windspd = 0;
@@ -66,13 +66,13 @@ void setup() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    tft.print(".");
   }
 
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  tft.println("");
+  tft.println("WiFi connected.");
+  tft.println("IP address: ");
+  tft.println(WiFi.localIP());
 
   // Connect to HiveMQ IoT
   wifiClient.setCACert(CERT_CA);
@@ -99,10 +99,13 @@ void loop() {
     numberDash.pushSprite(0, 0);
 
   } else {
-    //Retry connection if server lost
-    Serial.println("MQTT connection down");
-    delay(1000); //should replace not to disrupt loop
-    connectHiveMQ(&mqttClient);
+    if (current_time - previous_time >= wifi_delay) {
+      //Retry connection if server lost
+      Serial.println("MQTT connection down");
+      //delay(1000);  //should replace not to disrupt loop
+      connectHiveMQ(&mqttClient);
+      previous_time = current_time;
+    }
   }
 }
 
@@ -131,7 +134,7 @@ void messageHandler(int messageSize) {
   }
 
   if (myArray.hasOwnProperty("update")) {
-    strncpy(update, (const char*)myArray["update"], 21);
+    strncpy(update, (const char *)myArray["update"], 21);
   }
 
   Serial.println(messageSize);
@@ -150,8 +153,8 @@ void rotateScreen() {
 }
 
 //handle connection to MQTT server
-void connectHiveMQ(MqttClient *client){
-    // Connect to HiveMQ IoT
+void connectHiveMQ(MqttClient *client) {
+  // Connect to HiveMQ IoT
   client->setUsernamePassword(MQTT_USER, MQTT_PASS);
 
   if (client->connect(IOT_ENDPOINT, 8883)) {
