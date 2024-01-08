@@ -27,7 +27,9 @@ USB Mode	          Hardware CDC and JTAG
 #include "Dashboard.h"
 
 #define ROTATE_BUTTON 14
+#define CONFIG_BUTTON 0
 int screenRotation = 1;
+bool wifiConfigMode = false;
 
 //const char MQTT_TOPIC[] = "weather/0310";
 const char MQTT_TOPIC[] = "weather/0000";
@@ -44,7 +46,6 @@ char update[21] = { 0 };
 
 WiFiClientSecure wifiClient = WiFiClientSecure();
 MqttClient mqttClient(wifiClient);
-WiFiManager wifiManager;
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite numberDash = TFT_eSprite(&tft);
@@ -60,18 +61,21 @@ void setup() {
   pinMode(ROTATE_BUTTON, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(ROTATE_BUTTON), rotateScreen, FALLING);
 
-  wifiManager.autoConnect("iNetMeteoLT");
+  pinMode(CONFIG_BUTTON, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(CONFIG_BUTTON), enterConfig, FALLING);
+
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
   WiFi.mode(WIFI_STA);
-  /*
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin();
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     tft.print(".");
   }
-  */
+
   tft.println("");
   tft.println("WiFi connected.");
   tft.println("IP address: ");
@@ -83,6 +87,18 @@ void setup() {
 }
 
 void loop() {
+
+  if (wifiConfigMode) {
+    WiFiManager wifiManager;
+    // id/name, placeholder/prompt, default, length
+    WiFiManagerParameter stationID("id", "Station ID", "0000", 12);
+    wifiManager.addParameter(&stationID);
+
+    wifiManager.startConfigPortal("ConfigMeteo");
+    Serial.println("connected");
+    wifiConfigMode = false;
+  }
+
   unsigned long current_time = millis();  // number of milliseconds since the upload
 
   // checking for WIFI connection, reconnect if neded
@@ -112,7 +128,6 @@ void loop() {
   }
 }
 
-//34:85:18:8b:9a:48
 void messageHandler(int messageSize) {
   char topicContent[256] = { 0 };
   int i = 0;
@@ -140,8 +155,8 @@ void messageHandler(int messageSize) {
     strncpy(update, (const char *)myArray["update"], 21);
   }
 
-  Serial.println(messageSize);
-  Serial.println(screenRotation);
+  //Serial.println(messageSize);
+  //Serial.println(screenRotation);
   Serial.println(topicContent);
   Serial.println(update);
 }
@@ -151,6 +166,14 @@ void rotateScreen() {
   static uint32_t lastInt = 0;
   if (millis() - lastInt > 200) {
     screenRotation = -1 * screenRotation;
+    lastInt = millis();
+  }
+}
+
+void enterConfig() {
+  static uint32_t lastInt = 0;
+  if (millis() - lastInt > 200) {
+    wifiConfigMode = true;
     lastInt = millis();
   }
 }
