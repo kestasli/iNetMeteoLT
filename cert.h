@@ -1,7 +1,7 @@
-//const char WIFI_SSID[] = "#Telia-682DF5";
-//const char WIFI_PASSWORD[] = "YcHNusHsyGt3PZHt";
-const char WIFI_SSID[] = "KELI";
-const char WIFI_PASSWORD[] = "BBdc2017";
+const char WIFI_SSID[] = "#Telia-682DF5";
+const char WIFI_PASSWORD[] = "YcHNusHsyGt3PZHt";
+//const char WIFI_SSID[] = "KELI";
+//const char WIFI_PASSWORD[] = "BBdc2017";
 
 const char IOT_ENDPOINT[] = "e4444600f9834ebe8e6502c4dbccbf68.s2.eu.hivemq.cloud";
 

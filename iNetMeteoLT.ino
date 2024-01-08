@@ -18,6 +18,7 @@ USB Mode	          Hardware CDC and JTAG
 #include <WiFiClientSecure.h>
 #include <ArduinoMqttClient.h>
 #include <Arduino_JSON.h>
+#include <WiFiManager.h>
 #include "cert.h"
 
 #include <TFT_eSPI.h>  // Hardware-specific library
@@ -28,8 +29,8 @@ USB Mode	          Hardware CDC and JTAG
 #define ROTATE_BUTTON 14
 int screenRotation = 1;
 
-const char MQTT_TOPIC[] = "weather/0310";
-//const char MQTT_TOPIC[] = "weather/0000";
+//const char MQTT_TOPIC[] = "weather/0310";
+const char MQTT_TOPIC[] = "weather/0000";
 //const char MQTT_TOPIC[] = "weather/1187";
 //const char MQTT_TOPIC[] = "weather/4001";
 
@@ -43,6 +44,7 @@ char update[21] = { 0 };
 
 WiFiClientSecure wifiClient = WiFiClientSecure();
 MqttClient mqttClient(wifiClient);
+WiFiManager wifiManager;
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite numberDash = TFT_eSprite(&tft);
@@ -58,17 +60,18 @@ void setup() {
   pinMode(ROTATE_BUTTON, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(ROTATE_BUTTON), rotateScreen, FALLING);
 
+  wifiManager.autoConnect("iNetMeteoLT");
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
   WiFi.mode(WIFI_STA);
-
+  /*
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     tft.print(".");
   }
-
+  */
   tft.println("");
   tft.println("WiFi connected.");
   tft.println("IP address: ");
