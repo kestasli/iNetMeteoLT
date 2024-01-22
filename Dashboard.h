@@ -27,7 +27,7 @@ struct triangleCoord{
 coord calcCompassPoints(int x, int y, int diameter);
 triangleCoord calcTriangleCoord(int x0, int y0);
 
-void showDash(TFT_eSprite *sprite, float T, float S, char *date);
+void showDash(TFT_eSprite *sprite, float temp, float speed, char *date);
 void showDirection(TFT_eSprite *arrowSprite, TFT_eSprite * dashSprite, int D);
 
 

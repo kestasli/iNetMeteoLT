@@ -9,6 +9,14 @@ unsigned int dirColor;
 unsigned int circleColor;
 unsigned int tempColor;
 
+/*
+A static variable is a special kind of variable; it is allocated memory 'statically'.
+Its lifetime is the entire run of the program. It is specific to a function, i.e., only the function that defined it can access it.
+However, it doesn't get destroyed after the function call ends.
+It preserves its value between successive function calls. It is created and initialized the first time a function is called.
+In the next function call, it is not created again. It just exists.
+*/
+
 //calculates x y points for compass letters and dots
 coord calcCompassPoints(int x, int y, int diameter) {
   int radius = diameter / 2;
@@ -61,10 +69,20 @@ triangleCoord calcTriangleCoord(int x0, int y0) {
   return coord;
 }
 
-void showDash(TFT_eSprite *sprite, float T, float S, char *date) {
+void showDash(TFT_eSprite *sprite, float temp, float speed, char *date) {
 
   circleColor = TFT_SKYBLUE;
   tempColor = TFT_WHITE;
+
+  static float T = 0;
+  static float S = 0;
+
+  T = temp;
+  S = speed;
+
+  if (S == -1) { circleColor = TFT_DARKGREY; }
+  if (T == -99) { tempColor = TFT_DARKGREY; }
+
   //will put comapss letters in top left corner and add 7 points not to cut letters
   compassX = compassD / 2 + 7;
   compassY = compassD / 2 + 7 + 20;
@@ -81,7 +99,7 @@ void showDash(TFT_eSprite *sprite, float T, float S, char *date) {
   sprite->setTextDatum(CC_DATUM);
   int textW = sprite->drawFloat(T, 1, compassD + (SCREEN_W - compassD) / 2, SCREEN_H / 2);
 
-   //---------------------
+  //---------------------
   //Show windspeed gadget
   //---------------------
   sprite->setTextFont(FONT6);
@@ -92,9 +110,9 @@ void showDash(TFT_eSprite *sprite, float T, float S, char *date) {
   //
   //Show refresh time gadget
   //
-   sprite->setTextFont(FONT2);
-   sprite->setTextDatum(BC_DATUM);
-   sprite->drawString(date, compassD + (SCREEN_W - compassD) / 2, SCREEN_H);
+  sprite->setTextFont(FONT2);
+  sprite->setTextDatum(BC_DATUM);
+  sprite->drawString(date, compassD + (SCREEN_W - compassD) / 2, SCREEN_H);
 }
 
 //---------------------
@@ -103,6 +121,12 @@ void showDash(TFT_eSprite *sprite, float T, float S, char *date) {
 void showDirection(TFT_eSprite *arrowSprite, TFT_eSprite *dashSprite, int D) {
   dirColor = TFT_ORANGE;
   circleColor = TFT_SKYBLUE;
+
+  if (D == -1){
+    dirColor = TFT_DARKGREY;
+    circleColor = TFT_DARKGREY;
+  }
+
   //---------------------
   //Show compass circle gadget
   //---------------------
