@@ -77,11 +77,17 @@ void showDash(TFT_eSprite *sprite, float temp, float speed, char *date) {
   static float T = 0;
   static float S = 0;
 
-  T = temp;
-  S = speed;
+  if (speed != -1) {
+    S = speed;
+  } else {
+    circleColor = TFT_DARKGREY;
+  }
 
-  if (S == -1) { circleColor = TFT_DARKGREY; }
-  if (T == -99) { tempColor = TFT_DARKGREY; }
+  if (temp != -99) {
+    T = temp;
+  } else {
+    tempColor = TFT_DARKGREY;
+  }
 
   //will put comapss letters in top left corner and add 7 points not to cut letters
   compassX = compassD / 2 + 7;
@@ -122,7 +128,7 @@ void showDirection(TFT_eSprite *arrowSprite, TFT_eSprite *dashSprite, int D) {
   dirColor = TFT_ORANGE;
   circleColor = TFT_SKYBLUE;
 
-  if (D == -1){
+  if (D == -1) {
     dirColor = TFT_DARKGREY;
     circleColor = TFT_DARKGREY;
   }
