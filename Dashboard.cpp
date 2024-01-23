@@ -77,11 +77,23 @@ void showDash(TFT_eSprite *sprite, float temp, float speed, char *date) {
   static float T = 0;
   static float S = 0;
 
+  /*
+ -1 indicates speed sensor is not working.
+ if this is the case, then set color to grey and
+ use previous value from static variable
+*/
+
   if (speed != -1) {
     S = speed;
   } else {
     circleColor = TFT_DARKGREY;
   }
+
+  /*
+ -99 indicates temperature sensor is not working.
+ if this is the case, then set color to grey and
+ use previous value from static variable
+*/
 
   if (temp != -99) {
     T = temp;
@@ -124,11 +136,21 @@ void showDash(TFT_eSprite *sprite, float temp, float speed, char *date) {
 //---------------------
 //Show arrow gadget
 //---------------------
-void showDirection(TFT_eSprite *arrowSprite, TFT_eSprite *dashSprite, int D) {
+void showDirection(TFT_eSprite *arrowSprite, TFT_eSprite *dashSprite, int dir) {
   dirColor = TFT_ORANGE;
   circleColor = TFT_SKYBLUE;
 
-  if (D == -1) {
+  static int D = 0;
+
+  /*
+ -1 indicates direction sensor is not working.
+ if this is the case, then set color to grey and
+ use previous value from static variable
+*/
+
+  if (dir != -1) {
+    D = dir;
+  } else {
     dirColor = TFT_DARKGREY;
     circleColor = TFT_DARKGREY;
   }
