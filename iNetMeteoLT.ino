@@ -32,8 +32,8 @@ int screenRotation = 1;
 bool wifiConfigMode = false;
 
 //const char MQTT_TOPIC[] = "weather/0310";
-const char MQTT_TOPIC[] = "weather/0000";
-//const char MQTT_TOPIC[] = "weather/6950";
+//const char MQTT_TOPIC[] = "weather/0000";
+const char MQTT_TOPIC[] = "weather/7336";
 //const char MQTT_TOPIC[] = "weather/1187";
 //const char MQTT_TOPIC[] = "weather/4001";
 
