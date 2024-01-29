@@ -19,6 +19,7 @@ USB Mode	          Hardware CDC and JTAG
 #include <ArduinoMqttClient.h>
 #include <Arduino_JSON.h>
 #include <WiFiManager.h>
+#include <EEPROM.h>
 #include "cert.h"
 
 #include <TFT_eSPI.h>  // Hardware-specific library
@@ -33,9 +34,10 @@ bool wifiConfigMode = false;
 
 //const char MQTT_TOPIC[] = "weather/0310";
 //const char MQTT_TOPIC[] = "weather/0000";
-const char MQTT_TOPIC[] = "weather/7336";
+//const char MQTT_TOPIC[] = "weather/7336";
 //const char MQTT_TOPIC[] = "weather/1187";
 //const char MQTT_TOPIC[] = "weather/4001";
+char MQTT_TOPIC[24] = { 0 };
 
 unsigned long previous_time = 0;   //WiFi delay period start
 unsigned long wifi_delay = 10000;  // 10 seconds delay for WiFi recoonect
@@ -43,7 +45,7 @@ unsigned long wifi_delay = 10000;  // 10 seconds delay for WiFi recoonect
 double temp = 0;
 double windspd = 0;
 int winddir = 0;
-char update[21] = { 0 };
+char update[21] = { 0 }; //this holds text with last update time
 
 WiFiClientSecure wifiClient = WiFiClientSecure();
 MqttClient mqttClient(wifiClient);
@@ -68,6 +70,10 @@ void setup() {
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
+
+  //Serial.println("Flash:");
+  //Serial.println(stationID.getValue());
+
   WiFi.mode(WIFI_STA);
 
   //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -92,11 +98,16 @@ void loop() {
   if (wifiConfigMode) {
     WiFiManager wifiManager;
     // id/name, placeholder/prompt, default, length
-    WiFiManagerParameter stationID("id", "Station ID", "0000", 12);
+    WiFiManagerParameter stationID("id", "Station ID", "0000", 24);
     wifiManager.addParameter(&stationID);
-
     wifiManager.startConfigPortal("ConfigMeteo");
+
+    MQTT_TOPIC[0] = '\0';
+    strcat(MQTT_TOPIC, "weather/");
+    strcat(MQTT_TOPIC, stationID.getValue());
+
     Serial.println("connected");
+    Serial.println(MQTT_TOPIC);
     wifiConfigMode = false;
   }
 
@@ -171,6 +182,7 @@ void rotateScreen() {
   }
 }
 
+//Handle button press interrupt and enter WiFi config mode
 void enterConfig() {
   static uint32_t lastInt = 0;
   if (millis() - lastInt > 200) {
@@ -195,4 +207,13 @@ void connectHiveMQ(MqttClient *client) {
   // Subscribe to MQTT and register a callback
   client->onMessage(messageHandler);
   client->subscribe(MQTT_TOPIC);
+}
+
+void writeStationID(char* station){
+  EEPROM.write(0, 'M');
+  sizeof(station);
+}
+
+char* readStationID(){
+  return "test";
 }
