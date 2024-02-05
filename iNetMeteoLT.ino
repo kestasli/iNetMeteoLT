@@ -209,11 +209,36 @@ void connectHiveMQ(MqttClient *client) {
   client->subscribe(MQTT_TOPIC);
 }
 
-void writeStationID(char* station){
-  EEPROM.write(0, 'M');
-  sizeof(station);
+void writeStationID(char *station_id) {
+  Serial.println("EEPROM write");
+  unsigned int eeprom_location = 1; //write to location 1, loc 0 for rotation entry
+  while (*station_id) {
+    EEPROM.write(eeprom_location, *station_id);
+    station_id++;
+    eeprom_location++;
+    if (eeprom_location > 23) {break;}
+  }
+  EEPROM.write(eeprom_location, 0); //add 0 at the end to indicate string stop
 }
 
 char* readStationID(){
-  return "test";
+  Serial.println("EEPROM read");
+  static char station_id[24];
+  int eeprom_location = 1;
+  int string_location = 0;
+  while (EEPROM.read(eeprom_location) != 0){
+    station_id[string_location] = EEPROM.read(eeprom_location);
+    //Serial.println(station_id);
+    eeprom_location++;
+    string_location++;
+  }
+  return station_id;
+}
+
+void writeRotation(bool rotate){
+  EEPROM.write(0, rotate);
+}
+
+bool readRotation(){
+  return EEPROM.read(0);
 }
