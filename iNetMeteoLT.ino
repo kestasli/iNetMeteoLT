@@ -14,12 +14,12 @@ PSRAM	              OPI PSRAM
 USB Mode	          Hardware CDC and JTAG
 */
 
+#include <EEPROM.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoMqttClient.h>
 #include <Arduino_JSON.h>
 #include <WiFiManager.h>
-#include <EEPROM.h>
 #include "cert.h"
 
 #include <TFT_eSPI.h>  // Hardware-specific library
@@ -29,6 +29,8 @@ USB Mode	          Hardware CDC and JTAG
 
 #define ROTATE_BUTTON 14
 #define CONFIG_BUTTON 0
+#define EEPROM_SIZE 28
+
 int screenRotation = 1;
 bool wifiConfigMode = false;
 
@@ -37,7 +39,7 @@ bool wifiConfigMode = false;
 //const char MQTT_TOPIC[] = "weather/7336";
 //const char MQTT_TOPIC[] = "weather/1187";
 //const char MQTT_TOPIC[] = "weather/4001";
-char MQTT_TOPIC[24] = { 0 };
+char MQTT_TOPIC[26];
 
 unsigned long previous_time = 0;   //WiFi delay period start
 unsigned long wifi_delay = 10000;  // 10 seconds delay for WiFi recoonect
@@ -57,6 +59,7 @@ TFT_eSprite directionDash = TFT_eSprite(&tft);
 void setup() {
   // initialize the serial port
   Serial.begin(115200);
+  EEPROM.begin(EEPROM_SIZE);
   tft.init();
   tft.setRotation(screenRotation);
   tft.fillScreen(TFT_BLACK);
@@ -71,8 +74,12 @@ void setup() {
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
 
-  //Serial.println("Flash:");
-  //Serial.println(stationID.getValue());
+  //read MQTT topick from EEPROM
+  //MQTT_TOPIC = strcat("weather/", readStationID());
+  //MQTT_TOPIC[0] = '\0';
+  strcat(MQTT_TOPIC, "weather/");
+  strcat(MQTT_TOPIC, readStationID());
+  Serial.println(MQTT_TOPIC);
 
   WiFi.mode(WIFI_STA);
 
@@ -105,9 +112,11 @@ void loop() {
     MQTT_TOPIC[0] = '\0';
     strcat(MQTT_TOPIC, "weather/");
     strcat(MQTT_TOPIC, stationID.getValue());
+    Serial.println(stationID.getValue());
+    writeStationID(stationID.getValue());
 
     Serial.println("connected");
-    Serial.println(MQTT_TOPIC);
+    //Serial.println(MQTT_TOPIC);
     wifiConfigMode = false;
   }
 
@@ -209,7 +218,7 @@ void connectHiveMQ(MqttClient *client) {
   client->subscribe(MQTT_TOPIC);
 }
 
-void writeStationID(char *station_id) {
+void writeStationID(const char *station_id) {
   Serial.println("EEPROM write");
   unsigned int eeprom_location = 1; //write to location 1, loc 0 for rotation entry
   while (*station_id) {
@@ -219,6 +228,7 @@ void writeStationID(char *station_id) {
     if (eeprom_location > 23) {break;}
   }
   EEPROM.write(eeprom_location, 0); //add 0 at the end to indicate string stop
+  EEPROM.commit();
 }
 
 char* readStationID(){
