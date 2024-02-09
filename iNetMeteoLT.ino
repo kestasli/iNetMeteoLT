@@ -74,16 +74,12 @@ void setup() {
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
 
-  //read MQTT topick from EEPROM
-  //MQTT_TOPIC = strcat("weather/", readStationID());
-  //MQTT_TOPIC[0] = '\0';
   strcat(MQTT_TOPIC, "weather/");
   strcat(MQTT_TOPIC, readStationID());
   Serial.println(MQTT_TOPIC);
 
   WiFi.mode(WIFI_STA);
 
-  //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   WiFi.begin();
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -116,7 +112,6 @@ void loop() {
     writeStationID(stationID.getValue());
 
     Serial.println("connected");
-    //Serial.println(MQTT_TOPIC);
     wifiConfigMode = false;
   }
 
@@ -176,8 +171,6 @@ void messageHandler(int messageSize) {
     strncpy(update, (const char *)myArray["update"], 21);
   }
 
-  //Serial.println(messageSize);
-  //Serial.println(screenRotation);
   Serial.println(topicContent);
   Serial.println(update);
 }
@@ -238,7 +231,6 @@ char* readStationID(){
   int string_location = 0;
   while (EEPROM.read(eeprom_location) != 0){
     station_id[string_location] = EEPROM.read(eeprom_location);
-    //Serial.println(station_id);
     eeprom_location++;
     string_location++;
   }
