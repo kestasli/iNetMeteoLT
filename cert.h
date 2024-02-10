@@ -1,5 +1,5 @@
-const char WIFI_SSID[] = "#Telia-682DF5";
-const char WIFI_PASSWORD[] = "YcHNusHsyGt3PZHt";
+//const char WIFI_SSID[] = "#Telia-682DF5";
+//const char WIFI_PASSWORD[] = "YcHNusHsyGt3PZHt";
 //const char WIFI_SSID[] = "KELI";
 //const char WIFI_PASSWORD[] = "BBdc2017";
 
