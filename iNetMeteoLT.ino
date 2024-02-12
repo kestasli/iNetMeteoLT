@@ -14,6 +14,19 @@ PSRAM	              OPI PSRAM
 USB Mode	          Hardware CDC and JTAG
 */
 
+/*
+If you do an update you WILL have to edit the "User_Setup_Select.h" to comment-out the line:
+"//#include <User_Setup.h> // Default setup is root library folder"
+AND un-comment:
+"#include <User_Setups/Setup206_LilyGo_T_Display_S3.h> // For the LilyGo T-Display S3 based ESP32S3 with ST7789 170 x 320 TFT"
+
+https://github.com/teastainGit/LilyGO-T-display-S3-setup-and-examples/blob/main/T-DisplayS3_Setup.txt
+*/
+
+/*
+https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+*/
+
 #include <WiFiManager.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
@@ -28,9 +41,9 @@ USB Mode	          Hardware CDC and JTAG
 #include "cert.h"
 
 #define ROTATE_BUTTON 14
-#define CONFIG_BUTTON 0
+#define CONFIG_BUTTON 14
 #define EEPROM_SIZE 25
-#define CAPTIVE_TIMEOUT 120
+#define CAPTIVE_TIMEOUT 60
 
 int screenRotation = 1;
 bool wifiConfigMode = false;
@@ -53,6 +66,14 @@ TFT_eSprite numberDash = TFT_eSprite(&tft);
 TFT_eSprite directionDash = TFT_eSprite(&tft);
 
 void setup() {
+  //pinMode(ROTATE_BUTTON, INPUT_PULLUP);
+  //attachInterrupt(digitalPinToInterrupt(ROTATE_BUTTON), rotateScreen, FALLING);
+
+  //pinMode(CONFIG_BUTTON, INPUT_PULLUP);
+  //attachInterrupt(digitalPinToInterrupt(CONFIG_BUTTON), enterConfig, FALLING);
+
+  pinMode(CONFIG_BUTTON, INPUT_PULLUP);
+
   // initialize the serial port
   Serial.begin(115200);
   Serial.print("Config mode: ");
@@ -64,41 +85,43 @@ void setup() {
   tft.setRotation(screenRotation);
   tft.fillScreen(TFT_BLACK);
 
-  pinMode(ROTATE_BUTTON, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(ROTATE_BUTTON), rotateScreen, FALLING);
+  WiFi.mode(WIFI_STA);
 
-  pinMode(CONFIG_BUTTON, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(CONFIG_BUTTON), enterConfig, FALLING);
+  if (digitalRead(CONFIG_BUTTON) == LOW) {
+    runCaptivePortal();
+  }
 
-  delay(1000);
-
-  //MQTT_TOPIC[0] = '\0';
-
+  MQTT_TOPIC[0] = '\0';
   strcat(MQTT_TOPIC, "weather/");
   strcat(MQTT_TOPIC, readStationID());
   Serial.println(MQTT_TOPIC);
 
-  WiFi.mode(WIFI_STA);
+  //WiFiManager wifiManager;
+  //wifiManager.setConfigPortalTimeout(CAPTIVE_TIMEOUT);
+  //wifiManager.autoConnect("ConfigMeteo");
+  
   WiFi.begin();
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     tft.print(".");
   }
-
+  
   tft.println("");
   tft.println("WiFi connected.");
   tft.println("IP address: ");
   tft.println(WiFi.localIP());
-
+  
   // Connect to HiveMQ IoT
   wifiClient.setCACert(CERT_CA);
   connectHiveMQ(&mqttClient);
+  delay(1000);
 }
 
 void loop() {
-
-  if (wifiConfigMode) { runCaptivePortal(); }
+  
+  if (digitalRead(CONFIG_BUTTON) == LOW) {
+    rotateScreen();
+  }
 
   unsigned long current_time = millis();  // number of milliseconds since the upload
 
@@ -198,15 +221,15 @@ void connectHiveMQ(MqttClient *client) {
   client->subscribe(MQTT_TOPIC);
 }
 
-
 void runCaptivePortal() {
   Serial.println("CAPTIVE START");
-  WiFiManager wifiManager;
-  //wifiManager.setConfigPortalTimeout(CAPTIVE_TIMEOUT);
   // id/name, placeholder/prompt, default, length
+  WiFiManager wifiManager;
+  //wifiManager.setCleanConnect(true);
   WiFiManagerParameter stationID("id", "Station ID", "0000", 24);
+  wifiManager.setConfigPortalTimeout(CAPTIVE_TIMEOUT);
   wifiManager.addParameter(&stationID);
-  wifiManager.startConfigPortal("ConfigMeteo");
+  wifiManager.startConfigPortal("ConfigPortal");
   writeStationID(stationID.getValue());
 
   MQTT_TOPIC[0] = '\0';
@@ -216,6 +239,7 @@ void runCaptivePortal() {
 
   Serial.println("connected");
   wifiConfigMode = false;
+  Serial.println("Exiting CAPTIVE function");
 }
 
 void writeStationID(const char *station_id) {
