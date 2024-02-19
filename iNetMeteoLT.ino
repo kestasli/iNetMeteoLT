@@ -43,10 +43,9 @@ https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32
 #define ROTATE_BUTTON 14
 #define CONFIG_BUTTON 14
 #define EEPROM_SIZE 25
-#define CAPTIVE_TIMEOUT 60
+#define CAPTIVE_TIMEOUT 120
 
 int screenRotation = 1;
-bool wifiConfigMode = false;
 
 char MQTT_TOPIC[26];
 
@@ -56,7 +55,8 @@ unsigned long wifi_delay = 10000;  // 10 seconds delay for WiFi recoonect
 double temp = 0;
 double windspd = 0;
 int winddir = 0;
-char update[21] = { 0 };  //this holds text with last update time
+char update[21] = { 0 };        //text with last update time
+char station_name[14] = { 0 };  //text with station ID
 
 WiFiClientSecure wifiClient = WiFiClientSecure();
 MqttClient mqttClient(wifiClient);
@@ -66,21 +66,14 @@ TFT_eSprite numberDash = TFT_eSprite(&tft);
 TFT_eSprite directionDash = TFT_eSprite(&tft);
 
 void setup() {
-  //pinMode(ROTATE_BUTTON, INPUT_PULLUP);
-  //attachInterrupt(digitalPinToInterrupt(ROTATE_BUTTON), rotateScreen, FALLING);
-
-  //pinMode(CONFIG_BUTTON, INPUT_PULLUP);
-  //attachInterrupt(digitalPinToInterrupt(CONFIG_BUTTON), enterConfig, FALLING);
-
   pinMode(CONFIG_BUTTON, INPUT_PULLUP);
-
-  // initialize the serial port
   Serial.begin(115200);
-  Serial.print("Config mode: ");
-  Serial.println(wifiConfigMode);
 
   EEPROM.begin(EEPROM_SIZE);
   tft.init();
+
+  //read rotation settings from EEPROM
+  screenRotation = readRotation();
 
   tft.setRotation(screenRotation);
   tft.fillScreen(TFT_BLACK);
@@ -99,18 +92,18 @@ void setup() {
   //WiFiManager wifiManager;
   //wifiManager.setConfigPortalTimeout(CAPTIVE_TIMEOUT);
   //wifiManager.autoConnect("ConfigMeteo");
-  
+
   WiFi.begin();
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     tft.print(".");
   }
-  
+
   tft.println("");
   tft.println("WiFi connected.");
   tft.println("IP address: ");
   tft.println(WiFi.localIP());
-  
+
   // Connect to HiveMQ IoT
   wifiClient.setCACert(CERT_CA);
   connectHiveMQ(&mqttClient);
@@ -118,7 +111,7 @@ void setup() {
 }
 
 void loop() {
-  
+
   if (digitalRead(CONFIG_BUTTON) == LOW) {
     rotateScreen();
   }
@@ -181,6 +174,10 @@ void messageHandler(int messageSize) {
     strncpy(update, (const char *)myArray["update"], 21);
   }
 
+  if (myArray.hasOwnProperty("id")) {
+    strncpy(station_name, (const char *)myArray["id"], 14);
+  }
+
   Serial.println(topicContent);
   Serial.println(update);
 }
@@ -190,15 +187,7 @@ void rotateScreen() {
   static uint32_t lastInt = 0;
   if (millis() - lastInt > 200) {
     screenRotation = -1 * screenRotation;
-    lastInt = millis();
-  }
-}
-
-//Handle button press interrupt and enter WiFi config mode
-void enterConfig() {
-  static uint32_t lastInt = 0;
-  if (millis() - lastInt > 200) {
-    wifiConfigMode = true;
+    writeRotation(screenRotation);
     lastInt = millis();
   }
 }
@@ -238,7 +227,6 @@ void runCaptivePortal() {
   Serial.println(MQTT_TOPIC);
 
   Serial.println("connected");
-  wifiConfigMode = false;
   Serial.println("Exiting CAPTIVE function");
 }
 
@@ -256,7 +244,7 @@ void writeStationID(const char *station_id) {
 char *readStationID() {
   static char station_id[EEPROM_SIZE];
   Serial.println("EEPROM read");
-  int eeprom_location = 1;
+  int eeprom_location = 1;  //read from location 1, loc 0 for rotation entry
   int string_location = 0;
   while (EEPROM.read(eeprom_location) != 0 || eeprom_location < EEPROM_SIZE) {
     station_id[string_location] = EEPROM.read(eeprom_location);
@@ -266,10 +254,23 @@ char *readStationID() {
   return station_id;
 }
 
-void writeRotation(bool rotate) {
-  EEPROM.write(0, rotate);
+void writeRotation(int rotation) {
+  if (rotation == 1 || rotation == -1) {
+    int value = (rotation + 1) / 2;  //write 0 if rotation set to -1 and 1 if rotation set to 1
+    EEPROM.write(0, value);
+    EEPROM.commit();
+  } else {
+    EEPROM.write(0, 1);  //if supplied values are out of bounds, write 1
+  }
 }
 
-bool readRotation() {
-  return EEPROM.read(0);
+int readRotation() {
+  int value = EEPROM.read(0);
+  if (value == 0 || value == 1) {  //somthing was written in EEPROM
+    return 2 * value - 1;          //return 1 on EEPROM value 1 and -1 on value 0
+  } else {                         //nothing in EEPROM, probabbly firs time run
+    EEPROM.write(0, 1);
+    EEPROM.commit();
+    return 1;
+  }
 }
