@@ -77,6 +77,7 @@ void setup() {
 
   tft.setRotation(screenRotation);
   tft.fillScreen(TFT_BLACK);
+  tft.setTextFont(FONT2);
 
   WiFi.mode(WIFI_STA);
 
@@ -212,6 +213,8 @@ void connectHiveMQ(MqttClient *client) {
 
 void runCaptivePortal() {
   Serial.println("CAPTIVE START");
+  tft.println("Config Mode");
+  tft.print("Connect to the ConfigPortal WiFi");
   // id/name, placeholder/prompt, default, length
   WiFiManager wifiManager;
   //wifiManager.setCleanConnect(true);
